@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/images">
+        <file alias="lenka">lenka.png</file>
+        <file alias="file-open">Open_folder_full_24px_1186194_easyicon.net.png</file>
+        <file alias="file-new">new_file_24px_1187338_easyicon.net.png</file>
+        <file alias="file-saveas">open_file_24px_1187339_easyicon.net.png</file>
+        <file alias="file-save">Save_as_24px_1186319_easyicon.net.png</file>
+        <file alias="file-quit">Logout_24px_1186302_easyicon.net.png</file>
+        <file alias="file-close">delete_24px_1128280_easyicon.net.png</file>
+        <file alias="file-search">search_24px_1128291_easyicon.net.png</file>
+    </qresource>
+</RCC>
