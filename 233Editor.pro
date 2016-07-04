@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = TextEditor
+TARGET = 2333Editor
 TEMPLATE = app
 
 

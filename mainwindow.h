@@ -26,6 +26,8 @@ private:
 
   QString filePath;
 
+  void saveOrNot();
+
   void newFile();
   void openFile();
   void saveFile();
