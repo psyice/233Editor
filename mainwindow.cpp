@@ -15,15 +15,17 @@
 #include <QTextDocument>
 #include <QPalette>
 #include <QDebug>
+#include <QCursor>
+#include <QTextBlock>
 
 MainWindow::
-MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+MainWindow(QWidget *parent) : QMainWindow(parent) {
   setWindowTitle(tr("untitled - 233 Editor"));
   resize(QSize(800, 600));
 
   QMenuBar* menubar = menuBar();
   QMenu* file = menubar -> addMenu(tr("&File"));
-  QMenu* tool = menubar -> addMenu(tr("&Tool"));
+  QMenu* edit = menubar -> addMenu(tr("&Edit"));
   QMenu* help = menubar -> addMenu(tr("&Help"));
 
   newAction = new QAction(QIcon(":/images/new"), tr("&New"), this);
@@ -46,9 +48,17 @@ MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   quitAction -> setShortcut(QKeySequence::Quit);
   quitAction -> setStatusTip(tr("Quit"));
   file -> addAction(quitAction);
+  undoAction = new QAction(QIcon(":/images/undo"), tr("&Undo"), this);
+  quitAction -> setShortcut(QKeySequence::Undo);
+  undoAction -> setStatusTip(tr("Undo Changes"));
+  edit -> addAction(undoAction);
+  redoAction = new QAction(QIcon(":/images/redo"), tr("&Redo"), this);
+  quitAction -> setShortcut(QKeySequence::Redo);
+  redoAction -> setStatusTip(tr("Redo Changes"));
+  edit -> addAction(redoAction);
   searchAction = new QAction(QIcon(":/images/search"), tr("&Search and Replace"), this);
   searchAction -> setStatusTip(tr("Search and replace content"));
-  tool -> addAction(searchAction);
+  edit -> addAction(searchAction);
   aboutMeAction = new QAction(QIcon(":/images/aboutme"), tr("&About Me"), this);
   aboutMeAction -> setStatusTip(tr("About the author"));
   help -> addAction(aboutMeAction);
@@ -65,7 +75,11 @@ MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   toolBar -> addAction(openAction);
   toolBar -> addAction(saveAction);
   toolBar -> addAction(saveAsAction);
+  toolBar -> addSeparator();
+  toolBar -> addAction(undoAction);
+  toolBar -> addAction(redoAction);
   toolBar -> addAction(searchAction);
+  toolBar -> addSeparator();
   toolBar -> addAction(quitAction);
 
   textEdit = new QTextEdit(this);
@@ -73,11 +87,12 @@ MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
 
   statusBar();
   connect(textEdit, &QTextEdit::textChanged, this, &MainWindow::changeWindowTitle);
+  connect(undoAction, &QAction::triggered, textEdit, &QTextEdit::undo);
+  connect(redoAction, &QAction::triggered, textEdit, &QTextEdit::redo);
 }
 
 MainWindow::
 ~MainWindow() {
-    delete ui;
 }
 
 void
@@ -152,11 +167,11 @@ saveFile() {
     out << textEdit -> toPlainText();
 
     file.close();
+    textEdit -> document() -> setModified(0);
+    setWindowTitle(tr("%1 - 233 Editor").arg(filePath));
   } else {
     filePath = saveAsFile();
   }
-  textEdit -> document() -> setModified(0);
-  setWindowTitle(tr("%1 - 233 Editor").arg(filePath));
 }
 
 QString
@@ -179,29 +194,38 @@ saveAsFile() {
     out << textEdit -> toPlainText();
 
     file.close();
+    textEdit -> document() -> setModified(0);
+    setWindowTitle(tr("%1 - 233 Editor").arg(path));
   }
-  textEdit -> document() -> setModified(0);
-  setWindowTitle(tr("%1 - 233 Editor").arg(path));
   return path;
 }
 
 void
 MainWindow::
 searchContent() {
+  firstSearch = 0;
   QDialog* findDialog = new QDialog(this);
   findDialog -> setWindowTitle("Search and Replace");
   findTextLineEdit = new QLineEdit(findDialog);
-  QPushButton* findNextButton = new QPushButton(tr("find next"), findDialog);
-  QPushButton* findPreviousButton = new QPushButton(tr("find previous"), findDialog);
+  replaceTextLineEdit = new QLineEdit(findDialog);
+  QPushButton* findNextButton = new QPushButton(tr("Next"), findDialog);
+  QPushButton* findPreviousButton = new QPushButton(tr("Previous"), findDialog);
+  QPushButton* replaceButton = new QPushButton(tr("Replace"), findDialog);
+  QPushButton* replaceAllButton = new QPushButton(tr("Replace All"), findDialog);
   QVBoxLayout* layout = new QVBoxLayout(findDialog);
   layout -> addWidget(findTextLineEdit);
   layout -> addWidget(findNextButton);
   layout -> addWidget(findPreviousButton);
+  layout -> addWidget(replaceTextLineEdit);
+  layout -> addWidget(replaceButton);
+  layout -> addWidget(replaceAllButton);
 
   findDialog -> setLayout(layout);
   findDialog -> show();
   connect(findNextButton, &QPushButton::clicked, this, &MainWindow::showNextFindText);
   connect(findPreviousButton, &QPushButton::clicked, this, &MainWindow::showPreviousFindText);
+  connect(replaceButton, &QPushButton::clicked, this, &MainWindow::replaceContent);
+  connect(replaceAllButton, &QPushButton::clicked, this, &MainWindow::replaceAllContent);
 }
 
 void
@@ -218,13 +242,19 @@ void
 MainWindow::
 showNextFindText() {
   QString findText = findTextLineEdit -> text();
-  if (textEdit -> find(findText)) {
+  if (findText.trimmed().isEmpty()) {
+    QMessageBox::information(this, tr("Empty search field"), tr("The search field is empty!"));
+  } else {
+    if (textEdit -> find(findText)) {
       QPalette palette = textEdit -> palette();
       palette.setColor(QPalette::Highlight, palette.color(QPalette::Active, QPalette::Highlight));
       textEdit -> setPalette(palette);
-  } else {
+      findLast = false;
+    } else {
+      findLast = true;
       QMessageBox::warning(this, tr("Search and Replace"),
                            tr("Content not found:\n%1").arg(findText));
+    }
   }
 }
 
@@ -233,23 +263,89 @@ void
 MainWindow::
 showPreviousFindText() {
   QString findText = findTextLineEdit -> text();
-  if (textEdit -> find(findText, QTextDocument::FindBackward)) {
+  if (findText.trimmed().isEmpty()) {
+    QMessageBox::information(this, tr("Empty search field"), tr("The search field is empty!"));
+  } else {
+    QString findText = findTextLineEdit -> text();
+    if (textEdit -> find(findText, QTextDocument::FindBackward)) {
       QPalette palette = textEdit -> palette();
       palette.setColor(QPalette::Highlight, palette.color(QPalette::Active, QPalette::Highlight));
       textEdit -> setPalette(palette);
-  } else {
+      findLast = false;
+    } else {
+      findLast = true;
       QMessageBox::warning(this, tr("Search and Replace"),
                            tr("Content not found:\n%1").arg(findText));
+    }
   }
 }
+
+void
+MainWindow::
+replaceContent() {
+  QString replaceText = replaceTextLineEdit -> text();
+  if (replaceText.trimmed().isEmpty()) {
+    QMessageBox::information(this, tr("Empty replace field"), tr("The replace field is empty!"));
+  } else {
+      if (!firstSearch) {
+          this -> showNextFindText();
+          firstSearch = true;
+      } else {
+        if (!findLast)  {
+          textEdit -> textCursor().deleteChar();
+          textEdit -> textCursor().insertText(replaceText);
+        }
+        this -> showNextFindText();
+      }
+  }
+}
+
+void
+MainWindow::
+replaceAllContent() {
+  QString findText = findTextLineEdit -> text();
+  QString replaceText = replaceTextLineEdit -> text();
+  if (replaceText.trimmed().isEmpty()) {
+    QMessageBox::information(this, tr("Empty replace field"), tr("The replace field is empty!"));
+  } else {
+    if (findText.trimmed().isEmpty()) {
+      QMessageBox::information(this, tr("Empty search field"), tr("The search field is empty!"));
+    } else {
+      QTextDocument* document = textEdit -> document();
+      bool found = false;
+      QTextCursor highlightCursor(document);
+      QTextCursor cursor(document);
+
+      cursor.beginEditBlock();
+
+      QTextCharFormat colorFormat(highlightCursor.charFormat());
+      colorFormat.setAnchor(true);
+      while (!highlightCursor.isNull() && !highlightCursor.atEnd()) {
+        highlightCursor = document -> find(findText, highlightCursor);
+        if (!highlightCursor.isNull()) {
+          found = true;
+          highlightCursor.deleteChar();
+          highlightCursor.insertText(replaceText);
+        }
+      }
+      cursor.endEditBlock();
+
+      if (found == false) {
+        QMessageBox::warning(this, tr("Search and Replace"),
+                             tr("Content not found:\n%1").arg(findText));
+      }
+    }
+  }
+}
+
 
 // 当文档被modified时, 在窗口标题前添加*
 void
 MainWindow::
 changeWindowTitle() {
-    QString str = this -> windowTitle();
-    if (str[0] != '*') {
-      str = "*" + str;
-    }
-    this -> setWindowTitle(str);
+  QString str = this -> windowTitle();
+  if (str[0] != '*') {
+    str = "*" + str;
+  }
+  this -> setWindowTitle(str);
 }

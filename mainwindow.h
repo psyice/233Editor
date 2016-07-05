@@ -6,10 +6,6 @@
 #include <QTextEdit>
 #include <QLineEdit>
 
-namespace Ui {
-class MainWindow;
-}
-
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
@@ -19,6 +15,10 @@ public:
   ~MainWindow();
 
 private:
+
+  bool firstSearch;
+  bool findLast;
+
   QAction* newAction;
   QAction* openAction;
   QAction* saveAction;
@@ -26,9 +26,12 @@ private:
   QAction* quitAction;
   QAction* searchAction;
   QAction* aboutMeAction;
+  QAction* undoAction;
+  QAction* redoAction;
 
   QTextEdit* textEdit;
   QLineEdit* findTextLineEdit;
+  QLineEdit* replaceTextLineEdit;
 
   QString filePath;
 
@@ -41,11 +44,11 @@ private:
   void searchContent();
   void quitProgram();
 
-  Ui::MainWindow *ui;
-
 private slots:
   void showNextFindText();
   void showPreviousFindText();
+  void replaceContent();
+  void replaceAllContent();
   void changeWindowTitle();
 };
 
