@@ -9,14 +9,19 @@
 #include <QTextStream>
 #include <QSize>
 #include <QMessageBox>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QTextDocument>
+#include <QPalette>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
-  QMainWindow(parent)
+    QMainWindow(parent)
 {
-  //ui->setupUi(this);
 
-  this -> setWindowTitle(tr("233 Editor"));
-  this -> resize(QSize(800, 600));
+  setWindowTitle(tr("untitled - 233 Editor"));
+  resize(QSize(800, 600));
 
   QMenuBar* menubar = menuBar();
   QMenu* file = menubar -> addMenu(tr("&File"));
@@ -43,8 +48,8 @@ MainWindow::MainWindow(QWidget *parent) :
   quitAction -> setShortcut(QKeySequence::Quit);
   quitAction -> setStatusTip(tr("Quit"));
   file -> addAction(quitAction);
-  searchAction = new QAction(QIcon(":/images/search"), tr("&Search"), this);
-  searchAction -> setStatusTip(tr("Search content"));
+  searchAction = new QAction(QIcon(":/images/search"), tr("&Search and Replace"), this);
+  searchAction -> setStatusTip(tr("Search and replace content"));
   tool -> addAction(searchAction);
   aboutMeAction = new QAction(QIcon(":/images/aboutme"), tr("&About Me"), this);
   aboutMeAction -> setStatusTip(tr("About the author"));
@@ -69,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
   setCentralWidget(textEdit);
 
   statusBar();
+  connect(textEdit, &QTextEdit::textChanged, this, &MainWindow::changeWindowTitle);
 }
 
 MainWindow::~MainWindow()
@@ -87,8 +93,8 @@ MainWindow::saveOrNot() {
   msgBox.setDefaultButton(QMessageBox::Save);
   int ret = msgBox.exec();
   switch (ret) {
-  case QMessageBox::Save : textEdit -> document() -> setModified(0); saveFile(); textEdit -> setText(""); break;
-  case QMessageBox::Discard : textEdit -> document() -> setModified(0); textEdit -> setText(""); break;
+  case QMessageBox::Save : textEdit -> document() -> setModified(0); saveFile(); break;
+  case QMessageBox::Discard : textEdit -> document() -> setModified(0); break;
   case QMessageBox::Cancel : break;
   }
 }
@@ -96,16 +102,17 @@ MainWindow::saveOrNot() {
 void
 MainWindow::newFile() {
   if (textEdit -> document() -> isModified()) {
-      saveOrNot();
+    saveOrNot();
   }
   filePath = "";
   textEdit -> setText("");
+  this -> setWindowTitle(tr("untitled - 233 Editor"));
 }
 
 void
 MainWindow::openFile() {
   if (textEdit -> document() -> isModified()) {
-      saveOrNot();
+    saveOrNot();
   }
   filePath = QFileDialog::getOpenFileName(
         this,
@@ -115,22 +122,29 @@ MainWindow::openFile() {
         );
   if (!filePath.isEmpty()) {
     QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+      QMessageBox::warning(this, tr("Read File"),
+                           tr("Cannot open file:\n%1").arg(filePath));
       return;
+    }
 
     QTextStream in(&file);
     textEdit -> setText(in.readAll());
 
     file.close();
   }
+  setWindowTitle(tr("%1 - 233 Editor").arg(filePath));
 }
 
 void
 MainWindow::saveFile() {
   if (!filePath.isEmpty()) {
     QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+      QMessageBox::warning(this, tr("Write File"),
+                           tr("Cannot open file:\n%1").arg(filePath));
       return;
+    }
 
     QTextStream out(&file);
     out << textEdit -> toPlainText();
@@ -140,6 +154,7 @@ MainWindow::saveFile() {
     filePath = saveAsFile();
   }
   textEdit -> document() -> setModified(0);
+  setWindowTitle(tr("%1 - 233 Editor").arg(filePath));
 }
 
 QString
@@ -152,8 +167,11 @@ MainWindow::saveAsFile() {
         );
   if (!path.isEmpty()) {
     QFile file(path);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+      QMessageBox::warning(this, tr("Write File"),
+                           tr("Cannot open file:\n%1").arg(filePath));
       return path;
+    }
 
     QTextStream out(&file);
     out << textEdit -> toPlainText();
@@ -161,18 +179,65 @@ MainWindow::saveAsFile() {
     file.close();
   }
   textEdit -> document() -> setModified(0);
+  setWindowTitle(tr("%1 - 233 Editor").arg(path));
   return path;
 }
 
 void
 MainWindow::searchContent() {
+  QDialog* findDialog = new QDialog(this);
+  findDialog -> setWindowTitle("Search and Replace");
+  findTextLineEdit = new QLineEdit(findDialog);
+  QPushButton* findNextButton = new QPushButton(tr("find next"), findDialog);
+  QPushButton* findPreviousButton = new QPushButton(tr("find previous"), findDialog);
+  QVBoxLayout* layout = new QVBoxLayout(findDialog);
+  layout -> addWidget(findTextLineEdit);
+  layout -> addWidget(findNextButton);
+  layout -> addWidget(findPreviousButton);
 
+  findDialog -> setLayout(layout);
+  findDialog -> show();
+  connect(findNextButton, &QPushButton::clicked, this, &MainWindow::showNextFindText);
+  connect(findPreviousButton, &QPushButton::clicked, this, &MainWindow::showPreviousFindText);
 }
 
 void
 MainWindow::quitProgram() {
   if (textEdit -> document() -> isModified()) {
-      saveOrNot();
+    saveOrNot();
   }
   this -> hide();
+}
+
+void MainWindow::showNextFindText() {
+  QString findText = findTextLineEdit -> text();
+  if (textEdit -> find(findText)) {
+      QPalette palette = textEdit -> palette();
+      palette.setColor(QPalette::Highlight, palette.color(QPalette::Active, QPalette::Highlight));
+      textEdit -> setPalette(palette);
+  } else {
+      QMessageBox::warning(this, tr("Search and Replace"),
+                           tr("Content not found:\n%1").arg(findText));
+  }
+}
+
+void MainWindow::showPreviousFindText() {
+  QString findText = findTextLineEdit -> text();
+  if (textEdit -> find(findText, QTextDocument::FindBackward)) {
+      QPalette palette = textEdit -> palette();
+      palette.setColor(QPalette::Highlight, palette.color(QPalette::Active, QPalette::Highlight));
+      textEdit -> setPalette(palette);
+  } else {
+      QMessageBox::warning(this, tr("Search and Replace"),
+                           tr("Content not found:\n%1").arg(findText));
+  }
+}
+
+void
+MainWindow::changeWindowTitle() {
+    QString str = this -> windowTitle();
+    if (str[0] != '*') {
+      str = "*" + str;
+    }
+    this -> setWindowTitle(str);
 }

@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QAction>
 #include <QTextEdit>
+#include <QLineEdit>
 
 class MainWindow : public QMainWindow
 {
@@ -23,6 +24,7 @@ private:
   QAction* aboutMeAction;
 
   QTextEdit* textEdit;
+  QLineEdit* findTextLineEdit;
 
   QString filePath;
 
@@ -34,6 +36,11 @@ private:
   QString saveAsFile();
   void searchContent();
   void quitProgram();
+
+private slots:
+  void showNextFindText();
+  void showPreviousFindText();
+  void changeWindowTitle();
 };
 
 #endif // MAINWINDOW_H

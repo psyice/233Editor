@@ -21,5 +21,3 @@ FORMS    += mainwindow.ui
 
 RESOURCES += \
     res.qrc
-
-RC_ICONS = editor.ico
