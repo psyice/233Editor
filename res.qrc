@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/images">
         <file alias="aboutme">images/aboutme.png</file>
-        <file>images/editor.ico</file>
         <file alias="new">images/new.png</file>
         <file alias="open">images/open.png</file>
         <file alias="quit">images/quit.png</file>
@@ -10,5 +9,6 @@
         <file alias="saveas">images/saveas.png</file>
         <file alias="undo">images/undo.png</file>
         <file alias="redo">images/redo.png</file>
+        <file alias="editor">233editor.ico</file>
     </qresource>
 </RCC>

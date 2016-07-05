@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include <QMenu>
 #include <QMenuBar>
 #include <QToolBar>
@@ -21,6 +20,7 @@
 MainWindow::
 MainWindow(QWidget *parent) : QMainWindow(parent) {
   setWindowTitle(tr("untitled - 233 Editor"));
+  setWindowIcon(QIcon(":/images/editor"));
   resize(QSize(800, 600));
 
   QMenuBar* menubar = menuBar();
