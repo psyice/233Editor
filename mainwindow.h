@@ -6,6 +6,10 @@
 #include <QTextEdit>
 #include <QLineEdit>
 
+namespace Ui {
+class MainWindow;
+}
+
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
@@ -36,6 +40,8 @@ private:
   QString saveAsFile();
   void searchContent();
   void quitProgram();
+
+  Ui::MainWindow *ui;
 
 private slots:
   void showNextFindText();

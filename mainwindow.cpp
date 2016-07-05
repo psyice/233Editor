@@ -16,10 +16,8 @@
 #include <QPalette>
 #include <QDebug>
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent)
-{
-
+MainWindow::
+MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
   setWindowTitle(tr("untitled - 233 Editor"));
   resize(QSize(800, 600));
 
@@ -77,12 +75,13 @@ MainWindow::MainWindow(QWidget *parent) :
   connect(textEdit, &QTextEdit::textChanged, this, &MainWindow::changeWindowTitle);
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::
+~MainWindow() {
 }
 
 void
-MainWindow::saveOrNot() {
+MainWindow::
+saveOrNot() {
   QMessageBox msgBox;
   msgBox.setText(tr("The document has been modified."));
   msgBox.setInformativeText(tr("Do you want to save your changes?"));
@@ -100,7 +99,8 @@ MainWindow::saveOrNot() {
 }
 
 void
-MainWindow::newFile() {
+MainWindow::
+newFile() {
   if (textEdit -> document() -> isModified()) {
     saveOrNot();
   }
@@ -110,7 +110,8 @@ MainWindow::newFile() {
 }
 
 void
-MainWindow::openFile() {
+MainWindow::
+openFile() {
   if (textEdit -> document() -> isModified()) {
     saveOrNot();
   }
@@ -118,8 +119,7 @@ MainWindow::openFile() {
         this,
         tr("Open File"),
         ".",
-        tr("All(*.*);;Text Files(*.txt);;C source(*.c);;CPP file(*.cpp);;C/CPP header(*.h);;C file(*.c")
-        );
+        tr("All(*.*);;Text Files(*.txt);;C source(*.c);;CPP file(*.cpp);;C/CPP header(*.h);;C file(*.c"));
   if (!filePath.isEmpty()) {
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -137,7 +137,8 @@ MainWindow::openFile() {
 }
 
 void
-MainWindow::saveFile() {
+MainWindow::
+saveFile() {
   if (!filePath.isEmpty()) {
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -158,13 +159,13 @@ MainWindow::saveFile() {
 }
 
 QString
-MainWindow::saveAsFile() {
+MainWindow::
+saveAsFile() {
   QString path = QFileDialog::getSaveFileName(
         this,
         tr("Save File"),
         ".",
-        tr("All(*.*);;Text Files(*.txt);;C source(*.c);;CPP file(*.cpp);;C/CPP header(*.h);;C file(*.c")
-        );
+        tr("All(*.*);;Text Files(*.txt);;C source(*.c);;CPP file(*.cpp);;C/CPP header(*.h);;C file(*.c"));
   if (!path.isEmpty()) {
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -184,7 +185,8 @@ MainWindow::saveAsFile() {
 }
 
 void
-MainWindow::searchContent() {
+MainWindow::
+searchContent() {
   QDialog* findDialog = new QDialog(this);
   findDialog -> setWindowTitle("Search and Replace");
   findTextLineEdit = new QLineEdit(findDialog);
@@ -202,14 +204,18 @@ MainWindow::searchContent() {
 }
 
 void
-MainWindow::quitProgram() {
+MainWindow::
+quitProgram() {
   if (textEdit -> document() -> isModified()) {
     saveOrNot();
   }
   this -> hide();
 }
 
-void MainWindow::showNextFindText() {
+// 向前查找
+void
+MainWindow::
+showNextFindText() {
   QString findText = findTextLineEdit -> text();
   if (textEdit -> find(findText)) {
       QPalette palette = textEdit -> palette();
@@ -221,7 +227,10 @@ void MainWindow::showNextFindText() {
   }
 }
 
-void MainWindow::showPreviousFindText() {
+// 向后查找
+void
+MainWindow::
+showPreviousFindText() {
   QString findText = findTextLineEdit -> text();
   if (textEdit -> find(findText, QTextDocument::FindBackward)) {
       QPalette palette = textEdit -> palette();
@@ -233,8 +242,10 @@ void MainWindow::showPreviousFindText() {
   }
 }
 
+// 当文档被modified时, 在窗口标题前添加*
 void
-MainWindow::changeWindowTitle() {
+MainWindow::
+changeWindowTitle() {
     QString str = this -> windowTitle();
     if (str[0] != '*') {
       str = "*" + str;
