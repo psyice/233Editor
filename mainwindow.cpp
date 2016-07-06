@@ -9,6 +9,8 @@
 #include <QSize>
 #include <QMessageBox>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGridLayout>
 #include <QPushButton>
 #include <QLineEdit>
 #include <QTextDocument>
@@ -16,6 +18,7 @@
 #include <QDebug>
 #include <QCursor>
 #include <QTextBlock>
+#include <QLabel>
 
 MainWindow::
 MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -206,26 +209,40 @@ searchContent() {
   firstSearch = 0;
   QDialog* findDialog = new QDialog(this);
   findDialog -> setWindowTitle("Search and Replace");
+  QLabel* label1 = new QLabel(findDialog);
+  label1 -> setText(tr("Search for"));
+  QLabel* label2 = new QLabel(findDialog);
+  label2 -> setText(tr("Replace for"));
   findTextLineEdit = new QLineEdit(findDialog);
   replaceTextLineEdit = new QLineEdit(findDialog);
   QPushButton* findNextButton = new QPushButton(tr("Next"), findDialog);
   QPushButton* findPreviousButton = new QPushButton(tr("Previous"), findDialog);
   QPushButton* replaceButton = new QPushButton(tr("Replace"), findDialog);
   QPushButton* replaceAllButton = new QPushButton(tr("Replace All"), findDialog);
-  QVBoxLayout* layout = new QVBoxLayout(findDialog);
-  layout -> addWidget(findTextLineEdit);
-  layout -> addWidget(findNextButton);
-  layout -> addWidget(findPreviousButton);
-  layout -> addWidget(replaceTextLineEdit);
-  layout -> addWidget(replaceButton);
-  layout -> addWidget(replaceAllButton);
+  QVBoxLayout* rightLayout = new QVBoxLayout;
+  QGridLayout* leftLayout = new QGridLayout;
+  leftLayout -> addWidget(label1, 0, 0, 1, 2);
+  leftLayout -> addWidget(findTextLineEdit, 1, 0, 1, 2);
+  leftLayout -> addWidget(label2, 2, 0, 1, 2);
+  leftLayout -> addWidget(replaceTextLineEdit, 3, 0,1 ,2);
+  rightLayout -> addWidget(findNextButton);
+  rightLayout -> addWidget(findPreviousButton);
+  rightLayout -> addStretch();
+  rightLayout -> addWidget(replaceButton);
+  rightLayout -> addWidget(replaceAllButton);
 
-  findDialog -> setLayout(layout);
+  QHBoxLayout* mainLayout = new QHBoxLayout;
+  mainLayout -> addLayout(leftLayout);
+  mainLayout -> addLayout(rightLayout);
+  findDialog -> setLayout(mainLayout);
   findDialog -> show();
   connect(findNextButton, &QPushButton::clicked, this, &MainWindow::showNextFindText);
   connect(findPreviousButton, &QPushButton::clicked, this, &MainWindow::showPreviousFindText);
   connect(replaceButton, &QPushButton::clicked, this, &MainWindow::replaceContent);
   connect(replaceAllButton, &QPushButton::clicked, this, &MainWindow::replaceAllContent);
+  delete leftLayout;
+  delete rightLayout;
+  delete mainLayout;
 }
 
 void
