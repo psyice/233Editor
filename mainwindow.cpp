@@ -104,7 +104,6 @@ saveOrNot() {
   QMessageBox msgBox;
   msgBox.setText(tr("The document has been modified."));
   msgBox.setInformativeText(tr("Do you want to save your changes?"));
-  msgBox.setDetailedText(tr("Differences here..."));
   msgBox.setStandardButtons(QMessageBox::Save
                             | QMessageBox::Discard
                             | QMessageBox::Cancel);
