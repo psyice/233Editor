@@ -5,6 +5,7 @@
 #include <QAction>
 #include <QTextEdit>
 #include <QLineEdit>
+#include <QCloseEvent>
 
 class MainWindow : public QMainWindow
 {
@@ -13,6 +14,9 @@ class MainWindow : public QMainWindow
 public:
   explicit MainWindow(QWidget *parent = 0);
   ~MainWindow();
+
+protected:
+    void closeEvent(QCloseEvent* event);
 
 private:
 

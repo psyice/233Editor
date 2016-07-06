@@ -100,6 +100,13 @@ MainWindow::
 
 void
 MainWindow::
+closeEvent(QCloseEvent *event) {
+  quitProgram();
+}
+
+//确认是否保存
+void
+MainWindow::
 saveOrNot() {
   QMessageBox msgBox;
   msgBox.setText(tr("The document has been modified."));
@@ -150,8 +157,8 @@ openFile() {
     textEdit -> setText(in.readAll());
 
     file.close();
+    setWindowTitle(tr("%1 - 233 Editor").arg(filePath));
   }
-  setWindowTitle(tr("%1 - 233 Editor").arg(filePath));
 }
 
 void
@@ -218,19 +225,24 @@ searchContent() {
   QPushButton* findPreviousButton = new QPushButton(tr("Previous"), findDialog);
   QPushButton* replaceButton = new QPushButton(tr("Replace"), findDialog);
   QPushButton* replaceAllButton = new QPushButton(tr("Replace All"), findDialog);
-  QVBoxLayout* rightLayout = new QVBoxLayout;
-  QGridLayout* leftLayout = new QGridLayout;
-  leftLayout -> addWidget(label1, 0, 0, 1, 2);
-  leftLayout -> addWidget(findTextLineEdit, 1, 0, 1, 2);
-  leftLayout -> addWidget(label2, 2, 0, 1, 2);
-  leftLayout -> addWidget(replaceTextLineEdit, 3, 0,1 ,2);
+  QVBoxLayout* leftLayout = new QVBoxLayout();
+  QVBoxLayout* rightLayout = new QVBoxLayout();
+  leftLayout -> addSpacing(5);
+  leftLayout -> addWidget(label1);
+  leftLayout -> addWidget(findTextLineEdit);
+  leftLayout -> addStretch();
+  leftLayout -> addWidget(label2);
+  leftLayout -> addWidget(replaceTextLineEdit);
+  leftLayout -> addSpacing(5);
+  rightLayout -> addSpacing(5);
   rightLayout -> addWidget(findNextButton);
   rightLayout -> addWidget(findPreviousButton);
   rightLayout -> addStretch();
   rightLayout -> addWidget(replaceButton);
   rightLayout -> addWidget(replaceAllButton);
+  rightLayout -> addSpacing(5);
 
-  QHBoxLayout* mainLayout = new QHBoxLayout;
+  QHBoxLayout* mainLayout = new QHBoxLayout(findDialog);
   mainLayout -> addLayout(leftLayout);
   mainLayout -> addLayout(rightLayout);
   findDialog -> setLayout(mainLayout);
@@ -239,9 +251,6 @@ searchContent() {
   connect(findPreviousButton, &QPushButton::clicked, this, &MainWindow::showPreviousFindText);
   connect(replaceButton, &QPushButton::clicked, this, &MainWindow::replaceContent);
   connect(replaceAllButton, &QPushButton::clicked, this, &MainWindow::replaceAllContent);
-  delete leftLayout;
-  delete rightLayout;
-  delete mainLayout;
 }
 
 void
@@ -299,13 +308,19 @@ showPreviousFindText() {
 void
 MainWindow::
 replaceContent() {
+  QString findText = findTextLineEdit -> text();
   QString replaceText = replaceTextLineEdit -> text();
+  //若替换文本框为空(或全为空格), 则报错
   if (replaceText.trimmed().isEmpty()) {
     QMessageBox::information(this, tr("Empty replace field"), tr("The replace field is empty!"));
   } else {
+    //若搜索文本框为空(或全为空格), 则报错
+    if (findText.trimmed().isEmpty()) {
+      QMessageBox::information(this, tr("Empty search field"), tr("The search field is empty!"));
+    } else {
       if (!firstSearch) {
-          this -> showNextFindText();
-          firstSearch = true;
+        this -> showNextFindText();
+        firstSearch = true;
       } else {
         if (!findLast)  {
           textEdit -> textCursor().deleteChar();
@@ -313,6 +328,8 @@ replaceContent() {
         }
         this -> showNextFindText();
       }
+
+    }
   }
 }
 
@@ -321,9 +338,11 @@ MainWindow::
 replaceAllContent() {
   QString findText = findTextLineEdit -> text();
   QString replaceText = replaceTextLineEdit -> text();
+  //若替换文本框为空(或全为空格), 则报错
   if (replaceText.trimmed().isEmpty()) {
     QMessageBox::information(this, tr("Empty replace field"), tr("The replace field is empty!"));
   } else {
+    //若搜索文本框为空(或全为空格), 则报错
     if (findText.trimmed().isEmpty()) {
       QMessageBox::information(this, tr("Empty search field"), tr("The search field is empty!"));
     } else {
