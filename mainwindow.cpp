@@ -140,13 +140,13 @@ openFile() {
   if (textEdit -> document() -> isModified()) {
     saveOrNot();
   }
-  filePath = QFileDialog::getOpenFileName(
+  QString path = QFileDialog::getOpenFileName(
         this,
         tr("Open File"),
         ".",
         tr("All(*.*);;Text Files(*.txt);;C source(*.c);;CPP file(*.cpp);;C/CPP header(*.h);;C file(*.c"));
-  if (!filePath.isEmpty()) {
-    QFile file(filePath);
+  if (!path.isEmpty()) {
+    QFile file(path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
       QMessageBox::warning(this, tr("Read File"),
                            tr("Cannot open file:\n%1").arg(filePath));
@@ -157,7 +157,9 @@ openFile() {
     textEdit -> setText(in.readAll());
 
     file.close();
-    setWindowTitle(tr("%1 - 233 Editor").arg(filePath));
+    setWindowTitle(tr("%1 - 233 Editor").arg(path));
+    textEdit -> document() -> setModified(0);
+    filePath = path;
   }
 }
 
