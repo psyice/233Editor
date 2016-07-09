@@ -1,59 +1,57 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
 #include <QAction>
-#include <QTextEdit>
-#include <QLineEdit>
 #include <QCloseEvent>
+#include <QLineEdit>
+#include <QMainWindow>
+#include <QTextEdit>
 
-class MainWindow : public QMainWindow
-{
-  Q_OBJECT
+class MainWindow : public QMainWindow {
+	Q_OBJECT
 
-public:
-  explicit MainWindow(QWidget *parent = 0);
-  ~MainWindow();
+ public:
+	explicit MainWindow(QWidget* parent = 0);
+	~MainWindow();
 
-protected:
-    void closeEvent(QCloseEvent* event);
+ protected:
+	void closeEvent(QCloseEvent* event);
 
-private:
+ private:
+	bool firstSearch;
+	bool findLast;
 
-  bool firstSearch;
-  bool findLast;
+	QAction* newAction;
+	QAction* openAction;
+	QAction* saveAction;
+	QAction* saveAsAction;
+	QAction* quitAction;
+	QAction* searchAction;
+	QAction* aboutMeAction;
+	QAction* undoAction;
+	QAction* redoAction;
 
-  QAction* newAction;
-  QAction* openAction;
-  QAction* saveAction;
-  QAction* saveAsAction;
-  QAction* quitAction;
-  QAction* searchAction;
-  QAction* aboutMeAction;
-  QAction* undoAction;
-  QAction* redoAction;
+	QTextEdit* textEdit;
+	QLineEdit* findTextLineEdit;
+	QLineEdit* replaceTextLineEdit;
 
-  QTextEdit* textEdit;
-  QLineEdit* findTextLineEdit;
-  QLineEdit* replaceTextLineEdit;
+	QString filePath;
 
-  QString filePath;
+	void saveOrNot();
 
-  void saveOrNot();
+	void newFile();
+	void openFile();
+	void saveFile();
+	QString saveAsFile();
+	void searchContent();
+	void quitProgram();
 
-  void newFile();
-  void openFile();
-  void saveFile();
-  QString saveAsFile();
-  void searchContent();
-  void quitProgram();
-
-private slots:
-  void showNextFindText();
-  void showPreviousFindText();
-  void replaceContent();
-  void replaceAllContent();
-  void changeWindowTitle();
+ private slots:
+	void showNextFindText();
+	void showPreviousFindText();
+	void replaceContent();
+	void replaceAllContent();
+	void changeWindowTitle();
 };
 
-#endif // MAINWINDOW_H
+#endif	// MAINWINDOW_H
