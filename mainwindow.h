@@ -37,7 +37,7 @@ class MainWindow : public QMainWindow {
 
 	QString filePath;
 
-	void saveOrNot();
+    void saveOrNot();
 
 	void newFile();
 	void openFile();
@@ -45,6 +45,7 @@ class MainWindow : public QMainWindow {
 	QString saveAsFile();
 	void searchContent();
 	void quitProgram();
+    void aboutMe();
 
  private slots:
 	void showNextFindText();
